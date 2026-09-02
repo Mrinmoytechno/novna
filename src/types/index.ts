@@ -7,25 +7,26 @@ export type DecisionOutcome =
   | "KEEP_CURRENT"
   | "ALTERNATIVE";
 
-export type Urgency = "NOW" | "SOON" | "CAN_WAIT";
+export type Urgency =
+  | "NOW"
+  | "SOON"
+  | "CAN_WAIT";
 
 export type ProductSource = {
   manufacturer: string;
   productPage: string;
   pricePage?: string;
   priceCheckedAt: string;
-  priceType: "MRP" | "LISTED_PRICE" | "UNAVAILABLE";
+  priceType:
+    | "MRP"
+    | "LISTED_PRICE"
+    | "UNAVAILABLE";
 };
 
 export type ProductImage = {
   localPath: string;
   sourcePage: string;
   alt: string;
-};
-
-export type Verified<T> = {
-  value: T;
-  source: string;
 };
 
 export type Laptop = {
@@ -54,7 +55,9 @@ export type Laptop = {
 
   graphics: {
     name: string;
-    type: "INTEGRATED" | "DEDICATED";
+    type:
+      | "INTEGRATED"
+      | "DEDICATED";
   };
 
   memory: {
@@ -107,10 +110,15 @@ export type Laptop = {
 
 export type UserGoal = {
   description: string;
+
   budgetMinINR: number;
+
   budgetMaxINR: number;
+
   urgency: Urgency;
+
   requiredUseCases: string[];
+
   priorities: string[];
 };
 
@@ -118,14 +126,20 @@ export type DecisionState = {
   goal: UserGoal;
 
   consideredProductIds: string[];
+
   rejectedProductIds: string[];
+
   comparedProductIds: string[];
 
-  activeProductId: string | null;
+  activeProductId:
+    | string
+    | null;
 
   inferredPreferences: string[];
 
   insights: string[];
 
-  currentOutcome: DecisionOutcome | null;
+  currentOutcome:
+    | DecisionOutcome
+    | null;
 };
