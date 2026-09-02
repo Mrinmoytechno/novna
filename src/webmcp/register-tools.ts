@@ -6,6 +6,10 @@ import {
   createWebMCPTools,
 } from "./tools";
 
+import {
+  createUpdateUserGoalTool,
+} from "./goal-tool";
+
 export async function registerNOVNAWebMCP(
   handlers: WebMCPHandlers,
 ) {
@@ -20,8 +24,10 @@ export async function registerNOVNAWebMCP(
   }
 
   if (
-    !("modelContext" in
-      document)
+    !(
+      "modelContext" in
+      document
+    )
   ) {
     return {
       supported: false,
@@ -33,9 +39,20 @@ export async function registerNOVNAWebMCP(
     new AbortController();
 
   const tools =
-    createWebMCPTools(
-      handlers,
-    );
+    [
+      ...createWebMCPTools(
+        handlers,
+      ),
+
+      createUpdateUserGoalTool(
+        () =>
+          handlers
+            .getState()
+            .goal,
+
+        handlers.updateGoal,
+      ),
+    ];
 
   try {
     for (
@@ -55,12 +72,15 @@ export async function registerNOVNAWebMCP(
 
     return {
       supported: true,
+
       registered,
 
       dispose: () =>
         controller.abort(),
     };
-  } catch (error) {
+  } catch (
+    error
+  ) {
     controller.abort();
 
     throw error;

@@ -155,12 +155,19 @@ export default function Home() {
             addInsight(
               insight,
             ),
+
+        updateGoal:
+          (updates) =>
+            updateGoal(
+              updates,
+            ),
       }),
       [
         state,
         considerProduct,
         setComparedProducts,
         addInsight,
+        updateGoal,
       ],
     );
 
@@ -226,8 +233,12 @@ export default function Home() {
         </div>
 
         <DecisionSetup
-          goal={state.goal}
-          onUpdate={updateGoal}
+          goal={
+            state.goal
+          }
+          onUpdate={
+            updateGoal
+          }
         />
 
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_380px]">

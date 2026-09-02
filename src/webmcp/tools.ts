@@ -1,6 +1,7 @@
 import type {
   DecisionState,
   Laptop,
+  UserGoal,
 } from "@/types";
 
 import {
@@ -53,6 +54,11 @@ export type WebMCPHandlers = {
   addInsight: (
     insight: string,
   ) => void;
+
+  updateGoal: (
+    updates: Partial<UserGoal>,
+  ) => void;
+  
 };
 
 function serializeProduct(

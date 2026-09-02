@@ -25,8 +25,10 @@ export function useWebMCP(
   handlersRef.current =
     handlers;
 
-  const [supported, setSupported] =
-    useState(false);
+  const [
+    supported,
+    setSupported,
+  ] = useState(false);
 
   const [
     registeredTools,
@@ -35,40 +37,60 @@ export function useWebMCP(
     [],
   );
 
-  const [error, setError] =
-    useState<string | null>(
-      null,
-    );
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
-    let disposed = false;
+    let disposed =
+      false;
 
     const stableHandlers:
       WebMCPHandlers = {
-        getState: () =>
-          handlersRef.current.getState(),
+      getState:
+        () =>
+          handlersRef.current
+            .getState(),
 
-        considerProduct: (
+      considerProduct:
+        (
           productId,
         ) =>
-          handlersRef.current.considerProduct(
-            productId,
-          ),
+          handlersRef.current
+            .considerProduct(
+              productId,
+            ),
 
-        setComparedProducts: (
+      setComparedProducts:
+        (
           productIds,
         ) =>
-          handlersRef.current.setComparedProducts(
-            productIds,
-          ),
+          handlersRef.current
+            .setComparedProducts(
+              productIds,
+            ),
 
-        addInsight: (
+      addInsight:
+        (
           insight,
         ) =>
-          handlersRef.current.addInsight(
-            insight,
-          ),
-      };
+          handlersRef.current
+            .addInsight(
+              insight,
+            ),
+
+      updateGoal:
+        (
+          updates,
+        ) =>
+          handlersRef.current
+            .updateGoal(
+              updates,
+            ),
+    };
 
     async function register() {
       try {
@@ -77,7 +99,9 @@ export function useWebMCP(
             stableHandlers,
           );
 
-        if (disposed) {
+        if (
+          disposed
+        ) {
           return;
         }
 
@@ -90,7 +114,9 @@ export function useWebMCP(
         ) {
           setRegisteredTools(
             result.registered.map(
-              (tool) =>
+              (
+                tool,
+              ) =>
                 tool.name,
             ),
           );
@@ -98,7 +124,9 @@ export function useWebMCP(
       } catch (
         registrationError
       ) {
-        if (disposed) {
+        if (
+          disposed
+        ) {
           return;
         }
 
@@ -114,13 +142,16 @@ export function useWebMCP(
     void register();
 
     return () => {
-      disposed = true;
+      disposed =
+        true;
     };
   }, []);
 
   return {
     supported,
+
     registeredTools,
+
     error,
   };
 }
