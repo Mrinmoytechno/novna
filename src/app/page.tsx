@@ -29,6 +29,10 @@ import {
 } from "@/components/decision-brief";
 
 import {
+  DecisionSetup,
+} from "@/components/decision-setup";
+
+import {
   AgentActivity,
 } from "@/components/agent-activity";
 
@@ -74,6 +78,7 @@ export default function Home() {
     toggleCompare,
     setComparedProducts,
 
+    updateGoal,
     addInsight,
 
     clearComparison,
@@ -88,11 +93,9 @@ export default function Home() {
       () =>
         laptops.filter(
           (product) =>
-            state
-              .comparedProductIds
-              .includes(
-                product.id,
-              ),
+            state.comparedProductIds.includes(
+              product.id,
+            ),
         ),
       [
         state.comparedProductIds,
@@ -102,16 +105,13 @@ export default function Home() {
   const decisionProducts =
     useMemo(
       () =>
-        state
-          .consideredProductIds
+        state.consideredProductIds
           .length > 0
           ? laptops.filter(
               (product) =>
-                state
-                  .consideredProductIds
-                  .includes(
-                    product.id,
-                  ),
+                state.consideredProductIds.includes(
+                  product.id,
+                ),
             )
           : laptops,
       [
@@ -191,16 +191,13 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="hidden text-right sm:block">
             <p className="text-[10px] uppercase tracking-[0.14em] text-neutral-400">
-              Your goal
+              Live decision
             </p>
 
-            <p className="max-w-[260px] truncate text-xs font-medium">
-              {
-                state.goal
-                  .description
-              }
+            <p className="text-xs font-medium">
+              Human + agent
             </p>
           </div>
         </div>
@@ -222,26 +219,28 @@ export default function Home() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-500">
-            NOVNA helps you explore products while an
-            agent can investigate the same live decision
-            with you.
+            NOVNA helps you explore products
+            while an agent can investigate
+            the same live decision with you.
           </p>
         </div>
+
+        <DecisionSetup
+          goal={state.goal}
+          onUpdate={updateGoal}
+        />
 
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_380px]">
           <div className="min-w-0">
             <ExplorePanel
               consideredIds={
-                state
-                  .consideredProductIds
+                state.consideredProductIds
               }
               rejectedIds={
-                state
-                  .rejectedProductIds
+                state.rejectedProductIds
               }
               comparedIds={
-                state
-                  .comparedProductIds
+                state.comparedProductIds
               }
               onConsider={
                 considerProduct

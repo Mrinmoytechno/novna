@@ -11,188 +11,248 @@ import type {
   UserGoal,
 } from "@/types";
 
-const defaultGoal: UserGoal = {
-  description:
-    "I need a laptop for coding, studying and building projects.",
-  budgetMinINR: 50000,
-  budgetMaxINR: 150000,
-  urgency: "SOON",
-  requiredUseCases: [
-    "coding",
-    "study",
-  ],
-  priorities: [
-    "value",
-    "portability",
-  ],
-};
+const createDefaultGoal =
+  (): UserGoal => ({
+    description:
+      "I need a laptop for coding, studying and building projects.",
+    budgetMinINR: 50000,
+    budgetMaxINR: 150000,
+    urgency: "SOON",
+    requiredUseCases: [
+      "coding",
+      "study",
+    ],
+    priorities: [
+      "value",
+      "portability",
+    ],
+  });
 
-const initialState: DecisionState = {
-  goal: defaultGoal,
+const createInitialState =
+  (): DecisionState => ({
+    goal:
+      createDefaultGoal(),
 
-  consideredProductIds: [],
-  rejectedProductIds: [],
-  comparedProductIds: [],
+    consideredProductIds: [],
+    rejectedProductIds: [],
+    comparedProductIds: [],
 
-  activeProductId: null,
+    activeProductId: null,
 
-  inferredPreferences: [],
-  insights: [],
+    inferredPreferences: [],
+    insights: [],
 
-  currentOutcome: null,
-};
+    currentOutcome: null,
+  });
 
 export function useDecisionState() {
-  const [state, setState] =
-    useState<DecisionState>(
-      initialState,
-    );
+  const [
+    state,
+    setState,
+  ] = useState<DecisionState>(
+    createInitialState,
+  );
 
   const considerProduct =
-    useCallback((productId: string) => {
-      setState((current) => ({
-        ...current,
+    useCallback(
+      (productId: string) => {
+        setState(
+          (current) => ({
+            ...current,
 
-        consideredProductIds:
-          current.consideredProductIds.includes(
-            productId,
-          )
-            ? current.consideredProductIds
-            : [
-                ...current.consideredProductIds,
+            consideredProductIds:
+              current.consideredProductIds.includes(
                 productId,
-              ],
+              )
+                ? current.consideredProductIds
+                : [
+                    ...current.consideredProductIds,
+                    productId,
+                  ],
 
-        rejectedProductIds:
-          current.rejectedProductIds.filter(
-            (id) => id !== productId,
-          ),
+            rejectedProductIds:
+              current.rejectedProductIds.filter(
+                (id) =>
+                  id !== productId,
+              ),
 
-        activeProductId: productId,
-      }));
-    }, []);
+            activeProductId:
+              productId,
+          }),
+        );
+      },
+      [],
+    );
 
   const rejectProduct =
-    useCallback((productId: string) => {
-      setState((current) => ({
-        ...current,
+    useCallback(
+      (productId: string) => {
+        setState(
+          (current) => ({
+            ...current,
 
-        rejectedProductIds:
-          current.rejectedProductIds.includes(
-            productId,
-          )
-            ? current.rejectedProductIds
-            : [
-                ...current.rejectedProductIds,
+            rejectedProductIds:
+              current.rejectedProductIds.includes(
                 productId,
-              ],
+              )
+                ? current.rejectedProductIds
+                : [
+                    ...current.rejectedProductIds,
+                    productId,
+                  ],
 
-        consideredProductIds:
-          current.consideredProductIds.filter(
-            (id) => id !== productId,
-          ),
+            consideredProductIds:
+              current.consideredProductIds.filter(
+                (id) =>
+                  id !== productId,
+              ),
 
-        activeProductId:
-          current.activeProductId === productId
-            ? null
-            : current.activeProductId,
-      }));
-    }, []);
+            activeProductId:
+              current.activeProductId ===
+              productId
+                ? null
+                : current.activeProductId,
+          }),
+        );
+      },
+      [],
+    );
 
   const toggleCompare =
-    useCallback((productId: string) => {
-      setState((current) => {
-        const exists =
-          current.comparedProductIds.includes(
-            productId,
-          );
+    useCallback(
+      (productId: string) => {
+        setState(
+          (current) => {
+            const exists =
+              current.comparedProductIds.includes(
+                productId,
+              );
 
-        if (exists) {
-          return {
-            ...current,
-            comparedProductIds:
-              current.comparedProductIds.filter(
-                (id) => id !== productId,
-              ),
-          };
-        }
+            if (exists) {
+              return {
+                ...current,
+                comparedProductIds:
+                  current.comparedProductIds.filter(
+                    (id) =>
+                      id !== productId,
+                  ),
+              };
+            }
 
-        if (
-          current.comparedProductIds.length >= 3
-        ) {
-          return current;
-        }
+            if (
+              current.comparedProductIds
+                .length >= 3
+            ) {
+              return current;
+            }
 
-        return {
-          ...current,
-          comparedProductIds: [
-            ...current.comparedProductIds,
-            productId,
-          ],
-        };
-      });
-    }, []);
+            return {
+              ...current,
+              comparedProductIds: [
+                ...current.comparedProductIds,
+                productId,
+              ],
+            };
+          },
+        );
+      },
+      [],
+    );
 
   const setComparedProducts =
-    useCallback((productIds: string[]) => {
-      setState((current) => ({
-        ...current,
-        comparedProductIds:
-          productIds.slice(0, 3),
-      }));
-    }, []);
+    useCallback(
+      (productIds: string[]) => {
+        setState(
+          (current) => ({
+            ...current,
+            comparedProductIds:
+              Array.from(
+                new Set(
+                  productIds,
+                ),
+              ).slice(0, 3),
+          }),
+        );
+      },
+      [],
+    );
 
   const updateGoal =
     useCallback(
-      (updates: Partial<UserGoal>) => {
-        setState((current) => ({
-          ...current,
+      (
+        updates: Partial<UserGoal>,
+      ) => {
+        setState(
+          (current) => ({
+            ...current,
 
-          goal: {
-            ...current.goal,
-            ...updates,
-          },
-        }));
+            goal: {
+              ...current.goal,
+              ...updates,
+            },
+          }),
+        );
       },
       [],
     );
 
   const addInsight =
-    useCallback((insight: string) => {
-      setState((current) => ({
-        ...current,
+    useCallback(
+      (insight: string) => {
+        const normalized =
+          insight.trim();
 
-        insights: current.insights.includes(
-          insight,
-        )
-          ? current.insights
-          : [
-              ...current.insights,
-              insight,
-            ],
-      }));
-    }, []);
+        if (!normalized) {
+          return;
+        }
+
+        setState(
+          (current) => ({
+            ...current,
+
+            insights:
+              current.insights.includes(
+                normalized,
+              )
+                ? current.insights
+                : [
+                    ...current.insights,
+                    normalized,
+                  ],
+          }),
+        );
+      },
+      [],
+    );
 
   const clearComparison =
     useCallback(() => {
-      setState((current) => ({
-        ...current,
-        comparedProductIds: [],
-      }));
+      setState(
+        (current) => ({
+          ...current,
+          comparedProductIds: [],
+        }),
+      );
     }, []);
 
-  const consideredCount = useMemo(
-    () =>
-      state.consideredProductIds.length,
-    [state.consideredProductIds],
-  );
+  const consideredCount =
+    useMemo(
+      () =>
+        state.consideredProductIds
+          .length,
+      [
+        state.consideredProductIds,
+      ],
+    );
 
   return {
     state,
+
     consideredCount,
 
     considerProduct,
     rejectProduct,
+
     toggleCompare,
     setComparedProducts,
 
