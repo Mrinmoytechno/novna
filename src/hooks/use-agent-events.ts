@@ -1,46 +1,40 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useState,
 } from "react";
 
 import {
   subscribeToAgentEvents,
-  type AgentEvent,
 } from "@/webmcp/agent-events";
 
-const MAX_EVENTS = 12;
+import type {
+  AgentEvent,
+} from "@/webmcp/agent-events";
 
 export function useAgentEvents() {
-  const [events, setEvents] =
-    useState<AgentEvent[]>([]);
-
-  const addEvent = useCallback(
-    (event: AgentEvent) => {
-      setEvents((current) =>
-        [event, ...current].slice(
-          0,
-          MAX_EVENTS,
-        ),
-      );
-    },
+  const [
+    events,
+    setEvents,
+  ] = useState<AgentEvent[]>(
     [],
   );
 
   useEffect(() => {
     return subscribeToAgentEvents(
-      addEvent,
+      (event) => {
+        setEvents(
+          (current) => [
+            ...current,
+            event,
+          ],
+        );
+      },
     );
-  }, [addEvent]);
-
-  const clearEvents = useCallback(() => {
-    setEvents([]);
   }, []);
 
   return {
     events,
-    clearEvents,
   };
 }

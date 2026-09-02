@@ -7,6 +7,8 @@ import {
 } from "react";
 
 import type {
+  DecisionEvent,
+  DecisionEventType,
   DecisionState,
   UserGoal,
 } from "@/types";
@@ -15,13 +17,18 @@ const createDefaultGoal =
   (): UserGoal => ({
     description:
       "I need a laptop for coding, studying and building projects.",
+
     budgetMinINR: 50000,
+
     budgetMaxINR: 150000,
+
     urgency: "SOON",
+
     requiredUseCases: [
       "coding",
       "study",
     ],
+
     priorities: [
       "value",
       "portability",
@@ -34,16 +41,52 @@ const createInitialState =
       createDefaultGoal(),
 
     consideredProductIds: [],
+
     rejectedProductIds: [],
+
     comparedProductIds: [],
 
     activeProductId: null,
 
     inferredPreferences: [],
+
     insights: [],
 
     currentOutcome: null,
+
+    events: [],
   });
+
+function createEvent(
+  type: DecisionEventType,
+  title: string,
+  detail: string,
+  source:
+    | "HUMAN"
+    | "AGENT"
+    | "SYSTEM",
+  productIds: string[] = [],
+): DecisionEvent {
+  return {
+    id:
+      `${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 9)}`,
+
+    type,
+
+    timestamp:
+      new Date().toISOString(),
+
+    title,
+
+    detail,
+
+    productIds,
+
+    source,
+  };
+}
 
 export function useDecisionState() {
   const [
@@ -57,28 +100,45 @@ export function useDecisionState() {
     useCallback(
       (productId: string) => {
         setState(
-          (current) => ({
-            ...current,
-
-            consideredProductIds:
+          (current) => {
+            if (
               current.consideredProductIds.includes(
                 productId,
               )
-                ? current.consideredProductIds
-                : [
-                    ...current.consideredProductIds,
-                    productId,
-                  ],
+            ) {
+              return current;
+            }
 
-            rejectedProductIds:
-              current.rejectedProductIds.filter(
-                (id) =>
-                  id !== productId,
-              ),
+            return {
+              ...current,
 
-            activeProductId:
-              productId,
-          }),
+              consideredProductIds: [
+                ...current.consideredProductIds,
+                productId,
+              ],
+
+              rejectedProductIds:
+                current.rejectedProductIds.filter(
+                  (id) =>
+                    id !== productId,
+                ),
+
+              activeProductId:
+                productId,
+
+              events: [
+                ...current.events,
+
+                createEvent(
+                  "PRODUCT_CONSIDERED",
+                  "Product considered",
+                  "A product entered the active decision space.",
+                  "HUMAN",
+                  [productId],
+                ),
+              ],
+            };
+          },
         );
       },
       [],
@@ -88,31 +148,48 @@ export function useDecisionState() {
     useCallback(
       (productId: string) => {
         setState(
-          (current) => ({
-            ...current,
-
-            rejectedProductIds:
+          (current) => {
+            if (
               current.rejectedProductIds.includes(
                 productId,
               )
-                ? current.rejectedProductIds
-                : [
-                    ...current.rejectedProductIds,
-                    productId,
-                  ],
+            ) {
+              return current;
+            }
 
-            consideredProductIds:
-              current.consideredProductIds.filter(
-                (id) =>
-                  id !== productId,
-              ),
+            return {
+              ...current,
 
-            activeProductId:
-              current.activeProductId ===
-              productId
-                ? null
-                : current.activeProductId,
-          }),
+              rejectedProductIds: [
+                ...current.rejectedProductIds,
+                productId,
+              ],
+
+              consideredProductIds:
+                current.consideredProductIds.filter(
+                  (id) =>
+                    id !== productId,
+                ),
+
+              activeProductId:
+                current.activeProductId ===
+                productId
+                  ? null
+                  : current.activeProductId,
+
+              events: [
+                ...current.events,
+
+                createEvent(
+                  "PRODUCT_REJECTED",
+                  "Product rejected",
+                  "A product was removed from the active decision space.",
+                  "HUMAN",
+                  [productId],
+                ),
+              ],
+            };
+          },
         );
       },
       [],
@@ -131,11 +208,24 @@ export function useDecisionState() {
             if (exists) {
               return {
                 ...current,
+
                 comparedProductIds:
                   current.comparedProductIds.filter(
                     (id) =>
                       id !== productId,
                   ),
+
+                events: [
+                  ...current.events,
+
+                  createEvent(
+                    "COMPARISON_UPDATED",
+                    "Comparison updated",
+                    "A product was removed from the comparison.",
+                    "HUMAN",
+                    [productId],
+                  ),
+                ],
               };
             }
 
@@ -148,9 +238,25 @@ export function useDecisionState() {
 
             return {
               ...current,
+
               comparedProductIds: [
                 ...current.comparedProductIds,
                 productId,
+              ],
+
+              events: [
+                ...current.events,
+
+                createEvent(
+                  "COMPARISON_UPDATED",
+                  "Comparison updated",
+                  "A product was added to the comparison.",
+                  "HUMAN",
+                  [
+                    ...current.comparedProductIds,
+                    productId,
+                  ],
+                ),
               ],
             };
           },
@@ -161,17 +267,47 @@ export function useDecisionState() {
 
   const setComparedProducts =
     useCallback(
-      (productIds: string[]) => {
+      (
+        productIds: string[],
+      ) => {
         setState(
-          (current) => ({
-            ...current,
-            comparedProductIds:
+          (current) => {
+            const nextIds =
               Array.from(
                 new Set(
                   productIds,
                 ),
-              ).slice(0, 3),
-          }),
+              ).slice(0, 3);
+
+            const changed =
+              nextIds.join(",") !==
+              current.comparedProductIds.join(
+                ",",
+              );
+
+            if (!changed) {
+              return current;
+            }
+
+            return {
+              ...current,
+
+              comparedProductIds:
+                nextIds,
+
+              events: [
+                ...current.events,
+
+                createEvent(
+                  "COMPARISON_UPDATED",
+                  "Comparison updated",
+                  "The active comparison changed.",
+                  "AGENT",
+                  nextIds,
+                ),
+              ],
+            };
+          },
         );
       },
       [],
@@ -183,14 +319,44 @@ export function useDecisionState() {
         updates: Partial<UserGoal>,
       ) => {
         setState(
-          (current) => ({
-            ...current,
-
-            goal: {
+          (current) => {
+            const nextGoal = {
               ...current.goal,
               ...updates,
-            },
-          }),
+            };
+
+            const changedFields =
+              Object.keys(
+                updates,
+              );
+
+            if (
+              changedFields.length ===
+              0
+            ) {
+              return current;
+            }
+
+            return {
+              ...current,
+
+              goal:
+                nextGoal,
+
+              events: [
+                ...current.events,
+
+                createEvent(
+                  "GOAL_UPDATED",
+                  "Decision goal updated",
+                  `Updated: ${changedFields.join(
+                    ", ",
+                  )}.`,
+                  "AGENT",
+                ),
+              ],
+            };
+          },
         );
       },
       [],
@@ -198,7 +364,9 @@ export function useDecisionState() {
 
   const addInsight =
     useCallback(
-      (insight: string) => {
+      (
+        insight: string,
+      ) => {
         const normalized =
           insight.trim();
 
@@ -207,18 +375,67 @@ export function useDecisionState() {
         }
 
         setState(
-          (current) => ({
-            ...current,
-
-            insights:
+          (current) => {
+            if (
               current.insights.includes(
                 normalized,
               )
-                ? current.insights
-                : [
-                    ...current.insights,
-                    normalized,
-                  ],
+            ) {
+              return current;
+            }
+
+            return {
+              ...current,
+
+              insights: [
+                ...current.insights,
+                normalized,
+              ],
+
+              events: [
+                ...current.events,
+
+                createEvent(
+                  "INSIGHT_CREATED",
+                  "New insight",
+                  normalized,
+                  "AGENT",
+                ),
+              ],
+            };
+          },
+        );
+      },
+      [],
+    );
+
+  const addDecisionEvent =
+    useCallback(
+      (
+        type: DecisionEventType,
+        title: string,
+        detail: string,
+        source:
+          | "HUMAN"
+          | "AGENT"
+          | "SYSTEM",
+        productIds: string[] = [],
+      ) => {
+        setState(
+          (current) => ({
+            ...current,
+
+            events: [
+              ...current.events,
+
+              createEvent(
+                type,
+                title,
+                detail,
+                source,
+                productIds,
+              ),
+            ],
           }),
         );
       },
@@ -226,20 +443,37 @@ export function useDecisionState() {
     );
 
   const clearComparison =
-    useCallback(() => {
-      setState(
-        (current) => ({
-          ...current,
-          comparedProductIds: [],
-        }),
-      );
-    }, []);
+    useCallback(
+      () => {
+        setState(
+          (current) => ({
+            ...current,
+
+            comparedProductIds: [],
+
+            events: [
+              ...current.events,
+
+              createEvent(
+                "COMPARISON_UPDATED",
+                "Comparison cleared",
+                "The active comparison was cleared.",
+                "HUMAN",
+              ),
+            ],
+          }),
+        );
+      },
+      [],
+    );
 
   const consideredCount =
     useMemo(
       () =>
-        state.consideredProductIds
+        state
+          .consideredProductIds
           .length,
+
       [
         state.consideredProductIds,
       ],
@@ -251,13 +485,18 @@ export function useDecisionState() {
     consideredCount,
 
     considerProduct,
+
     rejectProduct,
 
     toggleCompare,
+
     setComparedProducts,
 
     updateGoal,
+
     addInsight,
+
+    addDecisionEvent,
 
     clearComparison,
   };

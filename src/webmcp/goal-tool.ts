@@ -18,68 +18,89 @@ export type GoalToolHandler = (
 
 type GoalUpdateInput = {
   description?: string;
+
   budgetMinINR?: number;
+
   budgetMaxINR?: number;
+
   urgency?: Urgency;
+
   requiredUseCases?: string[];
+
   priorities?: string[];
 };
 
 export const updateUserGoalSchema = {
   type: "object",
+
   properties: {
     description: {
       type: "string",
+
       description:
         "The user's updated description of what they are deciding.",
     },
 
     budgetMinINR: {
       type: "number",
+
       minimum: 0,
+
       description:
         "Optional minimum budget in Indian rupees.",
     },
 
     budgetMaxINR: {
       type: "number",
+
       minimum: 0,
+
       description:
         "Optional maximum budget in Indian rupees.",
     },
 
     urgency: {
       type: "string",
+
       enum: [
         "NOW",
         "SOON",
         "CAN_WAIT",
       ],
+
       description:
         "How urgently the user needs to make the purchase decision.",
     },
 
     requiredUseCases: {
       type: "array",
+
       minItems: 1,
+
       items: {
         type: "string",
       },
+
       description:
         "The use cases the product must support.",
     },
 
     priorities: {
       type: "array",
+
       minItems: 1,
+
       items: {
         type: "string",
       },
+
       description:
         "The factors the user currently cares about most.",
     },
   },
-  additionalProperties: false,
+
+  additionalProperties:
+    false,
 } as const;
 
 function cleanString(
@@ -142,8 +163,10 @@ function cleanBudget(
 ) {
   if (
     typeof value !==
-    "number" ||
-    !Number.isFinite(value) ||
+      "number" ||
+    !Number.isFinite(
+      value,
+    ) ||
     value < 0
   ) {
     return undefined;
@@ -166,6 +189,7 @@ function validateUrgency(
 
 export function createUpdateUserGoalTool(
   getCurrentGoal: () => UserGoal,
+
   updateGoal: GoalToolHandler,
 ): ModelContextTool {
   return {
@@ -462,10 +486,13 @@ export function createUpdateUserGoalTool(
           priorities;
       }
 
-      if (
+      const changedFields =
         Object.keys(
           updates,
-        ).length ===
+        );
+
+      if (
+        changedFields.length ===
         0
       ) {
         emitAgentEvent({
@@ -492,15 +519,26 @@ export function createUpdateUserGoalTool(
         updates,
       );
 
-      const nextGoal: UserGoal = {
+      const nextGoal:
+        UserGoal = {
         ...current,
         ...updates,
       };
 
-      const changedFields =
-        Object.keys(
-          updates,
-        );
+      emitAgentEvent({
+        type:
+          "GOAL_UPDATED",
+
+        toolName:
+          "update_user_goal",
+
+        title:
+          "Decision context changed",
+
+        message:
+          `The agent updated ${changedFields.length} part(s) of the decision context.`,
+
+      });
 
       emitAgentEvent({
         type:
@@ -514,7 +552,6 @@ export function createUpdateUserGoalTool(
 
         message:
           `Updated ${changedFields.length} decision field(s).`,
-
       });
 
       return success({

@@ -4,47 +4,75 @@ export type AgentEventType =
   | "TOOL_FAILED"
   | "INSIGHT_CREATED"
   | "PRODUCT_SURFACED"
-  | "COMPARISON_UPDATED";
+  | "COMPARISON_UPDATED"
+  | "GOAL_UPDATED"
+  | "DECISION_CHALLENGED"
+  | "OUTCOME_CHANGED";
 
 export type AgentEvent = {
   id: string;
+
   type: AgentEventType;
+
   toolName: string;
+
   title: string;
+
   message: string;
+
   timestamp: string;
+
   productId?: string;
+
+  productIds?: string[];
 };
 
-const EVENT_NAME = "novna:agent-event";
+const EVENT_NAME =
+  "novna:agent-event";
 
 export function emitAgentEvent(
-  event: Omit<AgentEvent, "id" | "timestamp">,
+  event: Omit<
+    AgentEvent,
+    "id" | "timestamp"
+  >,
 ) {
-  if (typeof window === "undefined") {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
     return;
   }
 
   const fullEvent: AgentEvent = {
     ...event,
-    id: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
+
+    id:
+      crypto.randomUUID(),
+
+    timestamp:
+      new Date().toISOString(),
   };
 
   window.dispatchEvent(
     new CustomEvent<AgentEvent>(
       EVENT_NAME,
       {
-        detail: fullEvent,
+        detail:
+          fullEvent,
       },
     ),
   );
 }
 
 export function subscribeToAgentEvents(
-  listener: (event: AgentEvent) => void,
+  listener: (
+    event: AgentEvent,
+  ) => void,
 ) {
-  if (typeof window === "undefined") {
+  if (
+    typeof window ===
+    "undefined"
+  ) {
     return () => {};
   }
 
@@ -54,7 +82,9 @@ export function subscribeToAgentEvents(
     const customEvent =
       event as CustomEvent<AgentEvent>;
 
-    listener(customEvent.detail);
+    listener(
+      customEvent.detail,
+    );
   };
 
   window.addEventListener(

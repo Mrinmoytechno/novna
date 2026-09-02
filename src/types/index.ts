@@ -122,6 +122,26 @@ export type UserGoal = {
   priorities: string[];
 };
 
+export type DecisionEventType =
+  | "GOAL_UPDATED"
+  | "PRODUCT_CONSIDERED"
+  | "PRODUCT_REJECTED"
+  | "COMPARISON_UPDATED"
+  | "INSIGHT_CREATED"
+  | "DECISION_CHALLENGED"
+  | "PRODUCT_SURFACED"
+  | "OUTCOME_CHANGED";
+
+export type DecisionEvent = {
+  id: string;
+  type: DecisionEventType;
+  timestamp: string;
+  title: string;
+  detail: string;
+  productIds: string[];
+  source: "HUMAN" | "AGENT" | "SYSTEM";
+};
+
 export type DecisionState = {
   goal: UserGoal;
 
@@ -142,4 +162,6 @@ export type DecisionState = {
   currentOutcome:
     | DecisionOutcome
     | null;
+
+  events: DecisionEvent[];
 };

@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
+  useRef,
 } from "react";
 
 import {
@@ -31,6 +33,10 @@ import {
 import {
   DecisionSetup,
 } from "@/components/decision-setup";
+
+import {
+  DecisionTimeline,
+} from "@/components/decision-timeline";
 
 import {
   AgentActivity,
@@ -80,6 +86,7 @@ export default function Home() {
 
     updateGoal,
     addInsight,
+    addDecisionEvent,
 
     clearComparison,
   } = useDecisionState();
@@ -87,6 +94,139 @@ export default function Home() {
   const {
     events,
   } = useAgentEvents();
+
+  const processedAgentEventIds =
+    useRef(
+      new Set<string>(),
+    );
+
+  useEffect(() => {
+    for (
+      const event of events
+    ) {
+      if (
+        processedAgentEventIds.current.has(
+          event.id,
+        )
+      ) {
+        continue;
+      }
+
+      processedAgentEventIds.current.add(
+        event.id,
+      );
+
+      if (
+        event.type ===
+          "TOOL_STARTED" ||
+        event.type ===
+          "TOOL_FAILED"
+      ) {
+        continue;
+      }
+
+      const productIds =
+        event.productIds ??
+        (
+          event.productId
+            ? [
+                event.productId,
+              ]
+            : []
+        );
+
+      if (
+        event.type ===
+        "GOAL_UPDATED"
+      ) {
+        addDecisionEvent(
+          "GOAL_UPDATED",
+          event.title,
+          event.message,
+          "AGENT",
+          productIds,
+        );
+
+        continue;
+      }
+
+      if (
+        event.type ===
+        "INSIGHT_CREATED"
+      ) {
+        addDecisionEvent(
+          "INSIGHT_CREATED",
+          event.title,
+          event.message,
+          "AGENT",
+          productIds,
+        );
+
+        continue;
+      }
+
+      if (
+        event.type ===
+        "PRODUCT_SURFACED"
+      ) {
+        addDecisionEvent(
+          "PRODUCT_SURFACED",
+          event.title,
+          event.message,
+          "AGENT",
+          productIds,
+        );
+
+        continue;
+      }
+
+      if (
+        event.type ===
+        "COMPARISON_UPDATED"
+      ) {
+        addDecisionEvent(
+          "COMPARISON_UPDATED",
+          event.title,
+          event.message,
+          "AGENT",
+          productIds,
+        );
+
+        continue;
+      }
+
+      if (
+        event.type ===
+        "DECISION_CHALLENGED"
+      ) {
+        addDecisionEvent(
+          "DECISION_CHALLENGED",
+          event.title,
+          event.message,
+          "AGENT",
+          productIds,
+        );
+
+        continue;
+      }
+
+      if (
+        event.type ===
+        "OUTCOME_CHANGED"
+      ) {
+        addDecisionEvent(
+          "OUTCOME_CHANGED",
+          event.title,
+          event.message,
+          "AGENT",
+          productIds,
+        );
+      }
+    }
+  }, [
+    events,
+    addDecisionEvent,
+  ]);
 
   const comparedProducts =
     useMemo(
@@ -317,6 +457,14 @@ export default function Home() {
               }
             />
           </aside>
+        </div>
+
+        <div className="mt-8">
+          <DecisionTimeline
+            events={
+              state.events
+            }
+          />
         </div>
       </div>
 
